@@ -12,7 +12,10 @@ class DomainResolve(socketserver.BaseRequestHandler):
         data, socket = self.request
         d = DNSRecord.parse(data)
         ip, domain = self.resolve_domain(query=str(d.q.qname))
-        response = self.generate_response(ip=ip, domain=domain, q_id=d.header.id)
+        if ip == "Not Found":
+            response = self.send_error(domain=domain, q_id=d.header.id)
+        else:
+            response = self.generate_response(ip=ip, domain=domain, q_id=d.header.id)
         socket.sendto(response.pack(), self.client_address)
 
     def resolve_domain(self, query):
@@ -30,8 +33,8 @@ class DomainResolve(socketserver.BaseRequestHandler):
             top_domain = domain_obj.tld
             subdomain = domain_obj.subdomain
 
-        except tld.exceptions.TldBadUrl:
-            self.send_error()
+        except:
+            return "Not Found", query
 
         try:
             return records[top_domain][domain][subdomain], query
@@ -43,13 +46,18 @@ class DomainResolve(socketserver.BaseRequestHandler):
                     query_modified = query[8:]
             else:
                 query_modified = query
-            resolve = resolver.Resolver()
-            resolve.nameservers = [EXTERNAL_DNS_IP]
-            ips = resolve.query(query_modified)
-            return ips, query
+            try:
+                resolve = resolver.Resolver()
+                resolve.nameservers = [EXTERNAL_DNS_IP]
+                ips = resolve.query(query_modified)
+                return ips, query
+            except:
+                return "Not Found", query
 
-    def send_error(self):
-        pass
+    def send_error(self, q_id, domain):
+        return DNSRecord(
+            DNSHeader(id=q_id, qr=1, aa=1, ra=1, rcode=3), q=DNSQuestion(domain)
+        )
 
     def generate_response(self, ip, domain, q_id):
         if type(ip) == str:
