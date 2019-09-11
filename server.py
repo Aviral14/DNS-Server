@@ -17,27 +17,38 @@ class DomainResolve(socketserver.BaseRequestHandler):
 
     def resolve_domain(self, query):
         top_domain = subdomain = domain = ""
+        modified = False
         query = query[:-1]
-        if bool(validators.url(query)):
-            domain_obj = tld.get_tld(f"{query}"[:-1], as_object=True)
+        if not bool(validators.url(query)):
+            query_modified = "http://" + query
+            modified = True
+        else:
+            query_modified = query
+        try:
+            domain_obj = tld.get_tld(query_modified, as_object=True)
             domain = domain_obj.domain
             top_domain = domain_obj.tld
             subdomain = domain_obj.subdomain
-        else:
-            name_list = query.split(".")
-            if len(name_list) == 2:
-                domain, top_domain = name_list
-            if len(name_list) == 3:
-                subdomain, domain, top_domain = name_list
+
+        except tld.exceptions.TldBadUrl:
+            self.send_error()
+
         try:
             return records[top_domain][domain][subdomain], query
         except KeyError:
+            if not modified:
+                if query[:8] == "http://":
+                    query_modified = query[7:]
+                else:
+                    query_modified = query[8:]
+            else:
+                query_modified = query
             resolve = resolver.Resolver()
             resolve.nameservers = ["8.8.8.8"]
-            ips = resolve.query(query)
+            ips = resolve.query(query_modified)
             return ips, query
 
-    def direct(self):
+    def send_error(self):
         pass
 
     def generate_response(self, ip, domain, q_id):
@@ -56,8 +67,8 @@ class DomainResolve(socketserver.BaseRequestHandler):
                 a=RR(domain, rdata=A(ip[0].address)),
             )
             print(str(record))
-            for ip_addr in ip[1:]:
-                record.add_answer(RR(domain, QTYPE.A, rdata=A(ip_addr.address)))
+            for ip_obj in ip[1:]:
+                record.add_answer(RR(domain, QTYPE.A, rdata=A(ip_obj.address)))
             return record
 
 
