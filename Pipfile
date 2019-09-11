@@ -7,6 +7,9 @@ name = "pypi"
 dnslib = "*"
 pylint = "*"
 black = "*"
+tld = "*"
+validators = "*"
+validator-collection = "*"
 
 [dev-packages]
 
