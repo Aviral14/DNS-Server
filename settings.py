@@ -1,2 +1,3 @@
 HOST = "127.0.0.1"
 PORT = 53
+EXTERNAL_DNS_IP = "8.8.8.8"

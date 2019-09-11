@@ -44,7 +44,7 @@ class DomainResolve(socketserver.BaseRequestHandler):
             else:
                 query_modified = query
             resolve = resolver.Resolver()
-            resolve.nameservers = ["8.8.8.8"]
+            resolve.nameservers = [EXTERNAL_DNS_IP]
             ips = resolve.query(query_modified)
             return ips, query
 
