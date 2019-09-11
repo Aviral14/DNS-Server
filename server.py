@@ -33,14 +33,14 @@ class DomainResolve(socketserver.BaseRequestHandler):
             top_domain = domain_obj.tld
             subdomain = domain_obj.subdomain
 
-        except:
+        except (tld.exceptions.TldBadUrl, tld.exceptions.TldDomainNotFound):
             return "Not Found", query
 
         try:
             return records[top_domain][domain][subdomain], query
         except KeyError:
             if not modified:
-                if query[:8] == "http://":
+                if query[:7] == "http://":
                     query_modified = query[7:]
                 else:
                     query_modified = query[8:]
@@ -51,7 +51,7 @@ class DomainResolve(socketserver.BaseRequestHandler):
                 resolve.nameservers = [EXTERNAL_DNS_IP]
                 ips = resolve.query(query_modified)
                 return ips, query
-            except:
+            except resolver.NXDOMAIN:
                 return "Not Found", query
 
     def send_error(self, q_id, query):
