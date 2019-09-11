@@ -10,6 +10,7 @@ black = "*"
 tld = "*"
 validators = "*"
 validator-collection = "*"
+dnspython = "*"
 
 [dev-packages]
 
