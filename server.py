@@ -9,13 +9,13 @@ from host_file import *
 
 class DomainResolve(socketserver.BaseRequestHandler):
     def handle(self):
-        data, socket = self.request
-        d = DNSRecord.parse(data)
-        ip, domain = self.resolve_domain(query=str(d.q.qname))
+        raw_data, socket = self.request
+        data = DNSRecord.parse(raw_data)
+        ip, query = self.resolve_domain(query=str(data.q.qname))
         if ip == "Not Found":
-            response = self.send_error(domain=domain, q_id=d.header.id)
+            response = self.send_error(query=query, q_id=data.header.id)
         else:
-            response = self.generate_response(ip=ip, domain=domain, q_id=d.header.id)
+            response = self.generate_response(ip=ip, query=query, q_id=data.header.id)
         socket.sendto(response.pack(), self.client_address)
 
     def resolve_domain(self, query):
@@ -54,29 +54,27 @@ class DomainResolve(socketserver.BaseRequestHandler):
             except:
                 return "Not Found", query
 
-    def send_error(self, q_id, domain):
+    def send_error(self, q_id, query):
         return DNSRecord(
-            DNSHeader(id=q_id, qr=1, aa=1, ra=1, rcode=3), q=DNSQuestion(domain)
+            DNSHeader(id=q_id, qr=1, aa=1, ra=1, rcode=3), q=DNSQuestion(query)
         )
 
-    def generate_response(self, ip, domain, q_id):
+    def generate_response(self, ip, query, q_id):
         if type(ip) == str:
-            a = DNSRecord(
+            record = DNSRecord(
                 DNSHeader(id=q_id, qr=1, aa=1, ra=1),
-                q=DNSQuestion(domain),
-                a=RR(domain, rdata=A(ip)),
+                q=DNSQuestion(query),
+                a=RR(query, rdata=A(ip)),
             )
-            print(str(a))
-            return a
+            return record
         else:
             record = DNSRecord(
                 DNSHeader(id=q_id, qr=1, aa=1, ra=1),
-                q=DNSQuestion(domain),
-                a=RR(domain, rdata=A(ip[0].address)),
+                q=DNSQuestion(query),
+                a=RR(query, rdata=A(ip[0].address)),
             )
-            print(str(record))
             for ip_obj in ip[1:]:
-                record.add_answer(RR(domain, QTYPE.A, rdata=A(ip_obj.address)))
+                record.add_answer(RR(query, QTYPE.A, rdata=A(ip_obj.address)))
             return record
 
 
