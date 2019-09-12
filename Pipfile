@@ -11,6 +11,8 @@ tld = "*"
 validators = "*"
 validator-collection = "*"
 dnspython = "*"
+django = "*"
+django-allauth = "*"
 
 [dev-packages]
 
