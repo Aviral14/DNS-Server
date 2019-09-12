@@ -13,9 +13,31 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from importlib import import_module
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from allauth.account.views import LoginView, LogoutView
+from allauth.socialaccount import providers
+
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("login/", LoginView.as_view(), name="account-login"),
+    path("logout/", LogoutView.as_view(), name="account-logout"),
+    path("social/", include("allauth.socialaccount.urls")),
+    path("registeration/", include("regieration.urls"), name="registeration"),
 ]
+
+
+# for django-allauth
+# Provider urlpatterns, as separate attribute (for reusability).
+provider_urlpatterns = []
+for provider in providers.registry.get_list():
+    try:
+        prov_mod = import_module(provider.get_package() + ".urls")
+    except ImportError:
+        continue
+    prov_urlpatterns = getattr(prov_mod, "urlpatterns", None)
+    if prov_urlpatterns:
+        provider_urlpatterns += prov_urlpatterns
+urlpatterns += provider_urlpatterns
