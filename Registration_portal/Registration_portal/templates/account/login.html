@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+{% load static %}
+{% load i18n %}
+{% load account socialaccount %}
+{% block content %}
+<html lang="en">
+
+<head>
+  <title>CCIT BPHC</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css">
+  <script src="{% static 'main.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'main.css' %}">
+</head>
+
+<body>
+  <style>
+    .navbar {
+      border-radius: 0px;
+    }
+  </style>
+
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <img class="navbar-brand" src="{% static 'bitslogo.png' %}"></img>
+        <a class="navbar-brand" href="#">CCIT BPHC</a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="{% url 'contact-us' %}">Contact Us</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="{% url 'account-login' %}"><span class="glyphicon glyphicon-user"></span> Login</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="position:relative;bottom:3em;">
+    <div class="row" style="">
+      <div class="Absolute-Center is-Responsive">
+        <center><img src="{% static 'ccit.png' %}" alt="..." style="background:#EEEEEE;border:0px;width:60%;height:60%;" class="img-thumbnail"></center><br><br>
+        <div class="col-sm-12 col-md-10 col-md-offset-1">
+          <center>
+		    {% if form.errors %}
+			  {% for field in form %}
+			  {% for error in field.errors %}
+			  <div class="alert alert-error" style="color:red;">
+				<b>{{ error|escape }}</b>
+			  </div>
+			  {% endfor %}
+			  {% endfor %}
+			  {% for error in form.non_field_errors %}
+			  <div class="alert alert-error" style="color:red;">
+				<strong>{{ error|escape }}</strong>
+			  </div>
+			  {% endfor %}
+			  {% endif %}
+            {% for message in messages %}
+            <b>{{ message }}<br><br></b>
+            {% endfor %}
+          </center>
+          <form action="{% url 'account-login' %}" id="loginForm" method="POST">
+            {% csrf_token %}
+            <div class="form-group input-group">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+              <input class="form-control" type="text" name='login' placeholder="email" />
+            </div>
+            <div class="form-group input-group">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+              <input class="form-control" type="password" name='password' placeholder="password" />
+            </div>
+        </div>
+        <div class="form-group">
+          <center><button type="submit" class="btn" style="width:50px;display:block;"><i class="fa fa-unlock-alt"
+                style="font-size:18px"></i></button></center>
+        </div>
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+        </form>
+        <div class="col-sm-12 col-md-10 col-md-offset-1">
+          {% get_providers as socialaccount_providers %}
+
+          {% if socialaccount_providers %}
+          <p>{% blocktrans with site.name as site_name %}<center><b>Faculty and students please login with your Bitsmail</b></center><br>{% endblocktrans %}</p>
+
+          <div class="socialaccount_ballot">
+
+            {% load socialaccount %}
+            {% get_providers as socialaccount_providers %}
+
+            {% for provider in socialaccount_providers %}
+            {% if provider.id == "openid" %}
+            {% for brand in provider.get_brands %}
+            <li>
+              <label for="default" class="btn btn-default" onclick="" style="position:relative;">
+                <a title="{{brand.name}}" class="socialaccount_provider {{provider.id}} {{brand.id}}"
+                  href="{% provider_login_url provider.id openid=brand.openid_url process=process %}">{{brand.name}}</a>
+              </label>
+            </li>
+            {% endfor %}
+            {% endif %}
+            <center><label for="default" class="btn btn-default" onclick=""
+                style="position:relative;text-overflow: ellipsis;">
+                <a title="{{provider.name}}" class="socialaccount_provider {{provider.id}}"
+                  href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}"><img
+                    width="20px"
+                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png" />
+                  Google</a>
+              </label>
+            </center>
+
+
+            {% endfor %}
+
+          </div>
+
+          {% include "socialaccount/snippets/login_extra.html" %}
+
+          {% else %}
+          <p>{% blocktrans %}{% endblocktrans %}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {%endblock%}
