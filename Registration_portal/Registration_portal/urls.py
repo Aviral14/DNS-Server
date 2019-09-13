@@ -25,7 +25,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="account-login"),
     path("logout/", LogoutView.as_view(), name="account-logout"),
     path("social/", include("allauth.socialaccount.urls")),
-    path("registeration/", include("regieration.urls"), name="registeration"),
+    path("registeration/", include("registeration.urls"), name="registeration"),
 ]
 
 
