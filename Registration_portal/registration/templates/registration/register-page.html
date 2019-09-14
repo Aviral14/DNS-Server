@@ -1,0 +1,27 @@
+{% extends 'registration/base.html' %}
+{% block content %}
+</body>
+
+<head>
+    <title>Register</title>
+</head>
+
+<body>
+    <h1 style="text-align:center;">Register Your Domain</h1>
+    <br>
+    <h2 style="text-align:left;">Welcome {{user.username}}</h2>
+    <br>
+    <center>
+        <form action="{% url 'register-page' %}" method="POST">
+            {% csrf_token %}
+            Domain:<br>
+            <input type="text" name="domain" value="'domain.tld' Example-abc.com ">
+            <br>
+            IP Address:<br>
+            <input type="text" name="ip" value="0.0.0.0">
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+    </center>
+</body>
+{% endblock %}
