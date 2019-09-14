@@ -23,9 +23,10 @@ from allauth.socialaccount import providers
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("login/", LoginView.as_view(), name="account-login"),
+    path("", LoginView.as_view(), name="home"),
     path("logout/", LogoutView.as_view(), name="account-logout"),
     path("social/", include("allauth.socialaccount.urls")),
-    path("registeration/", include("registeration.urls"), name="registeration"),
+    path("registration/", include("registration.urls"), name="registration"),
 ]
 
 
