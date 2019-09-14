@@ -12,6 +12,6 @@ The host_file contains the DNS records and the server.py has the actual code for
 Run server.py file with admin privileges (since it contains binding of Port 53) to launch the server.
 
 To run the portal-<br>
-Change directory to Registration_Portal and run the commamd-<br>
+Change directory to Registration_portal and run the command-<br>
 pyhton3 manage.py runserver
 
