@@ -2,10 +2,13 @@ import socketserver
 import validators
 from dnslib import DNSRecord, DNSHeader, DNSQuestion, RR, A, QTYPE
 import tld
+import threading 
 from dns import resolver
 from settings import *
 from host_file import *
 
+class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
+    pass
 
 class DomainResolve(socketserver.BaseRequestHandler):
     def handle(self):
@@ -78,6 +81,6 @@ class DomainResolve(socketserver.BaseRequestHandler):
             return record
 
 
-dns_server = socketserver.UDPServer((HOST, PORT), DomainResolve)
-dns_server.serve_forever()
-
+dns_server = ThreadedUDPServer((HOST, PORT), DomainResolve)
+server_thread = threading.Thread(target=dns_server.serve_forever)
+server_thread.start()
