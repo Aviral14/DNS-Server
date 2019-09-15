@@ -1,9 +1,13 @@
+import tld
+import json
+import socket
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-import tld
-import json
 from .forms import RegistrationForm
+
+HOST = "127.0.0.1"
+PORT = 8080
 
 
 @login_required
@@ -24,10 +28,17 @@ def register_domain(request):
             form_obj.user = request.user
             duplicacy, records = update_records(domain=form_obj.domain, ip=form_obj.ip)
             if not duplicacy:
-                form_obj.save()
-                with open("registration/host_file.json", "w") as host_file:
-                    json.dump(records, host_file)
-                messages.success(request, "Domain Successfully Registered")
+                status = send_to_dns(domain=form_obj.domain, ip=form_obj.ip)
+                if status == "Success":
+                    form_obj.save()
+                    with open("registration/host_file.json", "w") as host_file:
+                        json.dump(records, host_file)
+                    messages.success(request, "Domain Successfully Registered")
+                else:
+                    messages.success(
+                        request,
+                        "Can't Connect to DNS Server Right Now! Please Try Again Later.",
+                    )
             else:
                 if records == "Error":
                     messages.error(request, "Enter a valid Domain Name!")
@@ -46,7 +57,8 @@ def register_domain(request):
 
 
 def update_records(domain, ip):
-    records = json.loads(open("registration/host_file.json").read())
+    with open("registration/host_file.json") as file_obj:
+        records = json.loads(file_obj.read())
     domain_modified = "http://" + domain
     try:
         domain_obj = tld.get_tld(domain_modified, as_object=True)
@@ -61,7 +73,7 @@ def update_records(domain, ip):
             if subdomain in list(records[top_domain][second_domain].keys()):
                 return True, "Duplicate"
             else:
-                records[top_domain].update({second_domain: {subdomain: ip}})
+                records[top_domain][second_domain].update({subdomain: ip})
                 return False, records
 
         else:
@@ -70,6 +82,16 @@ def update_records(domain, ip):
     else:
         records.update({top_domain: {second_domain: {subdomain: ip}}})
         return False, records
+
+
+def send_to_dns(domain, ip):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socket_obj:
+        try:
+            socket_obj.connect((HOST, PORT))
+            socket_obj.send(f"{domain},{ip}".encode())
+            return "Success"
+        except:
+            return "Failure"
 
 
 def signup(request):
