@@ -1,14 +1,16 @@
 import socketserver
 import validators
+import json
 from dnslib import DNSRecord, DNSHeader, DNSQuestion, RR, A, QTYPE
 import tld
-import threading 
+import threading
 from dns import resolver
-from settings import *
-from host_file import *
+from settings import HOST, PORT, EXTERNAL_DNS_IP
+
 
 class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
     pass
+
 
 class DomainResolve(socketserver.BaseRequestHandler):
     def handle(self):
@@ -22,6 +24,8 @@ class DomainResolve(socketserver.BaseRequestHandler):
         socket.sendto(response.pack(), self.client_address)
 
     def resolve_domain(self, query):
+        with open("host_file.json") as file_obj:
+            records = json.loads(file_obj.read())
         top_domain = subdomain = domain = ""
         modified = False
         query = query[:-1]
